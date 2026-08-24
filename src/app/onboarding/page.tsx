@@ -20,6 +20,12 @@ export default async function OnboardingPage() {
     redirect("/login?callbackUrl=/onboarding");
   }
 
+  // Admins never fill the student form — send them to their dashboard
+  const role = session.user.role;
+  if (role === "ADMIN" || role === "SUPER_ADMIN") {
+    redirect("/admin/dashboard");
+  }
+
   const student = await prisma.student.findUnique({
     where: { userId },
   });
