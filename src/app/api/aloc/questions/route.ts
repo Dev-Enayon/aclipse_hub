@@ -9,11 +9,13 @@ import {
   type AlocSubject,
 } from "@/lib/aloc";
 
+// Anonymous visitors (public "free quiz") may fetch a small number of
+// questions per request; signed-in users get the full documented range.
+const ANON_MAX_COUNT = 10;
+
 export async function GET(request: NextRequest) {
   const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const isAuthenticated = !!session?.user;
 
   const sp = request.nextUrl.searchParams;
   const subject = sp.get("subject") ?? "";
@@ -63,6 +65,16 @@ export async function GET(request: NextRequest) {
       );
     }
     countParam = Number(countRaw);
+  }
+
+  if (!isAuthenticated && countParam > ANON_MAX_COUNT) {
+    return NextResponse.json(
+      {
+        error: `Sign in to fetch more than ${ANON_MAX_COUNT} questions per request`,
+        signInRequired: true,
+      },
+      { status: 401 }
+    );
   }
 
   try {

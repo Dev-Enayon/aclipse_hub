@@ -15,7 +15,9 @@ export function middleware(req: NextRequest) {
   }
 
   // API routes that don't require authentication
-  if (pathname.startsWith("/api/auth")) {
+  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/aloc")) {
+    // /api/aloc enforces its own auth rules (free quiz allows limited
+    // anonymous access; the route returns JSON 401 where sign-in is required)
     return NextResponse.next();
   }
 
