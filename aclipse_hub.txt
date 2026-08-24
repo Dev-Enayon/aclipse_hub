@@ -1,0 +1,681 @@
+## Project Overview
+
+Build a modern, production-ready educational platform called **Aclipse Hub**.
+
+The platform consists of **two connected web applications** that share one backend and one database.
+
+1. **Public Quiz Platform**
+2. **Private Student Platform**
+
+The system must be scalable, secure, responsive, and easy for non-technical administrators to manage.
+
+---
+
+# Primary Goal
+
+The platform should:
+
+* attract visitors through free quizzes
+* convert visitors into paying students
+* provide premium CBT exams
+* allow admins to manage everything without coding
+* become a long-term archive of thousands of exam questions
+
+---
+
+# Tech Stack
+
+Use modern technologies.
+
+Frontend
+
+* Next.js 15
+* React 19
+* TypeScript
+* TailwindCSS
+* Shadcn UI
+
+Backend
+
+* Next.js API Routes or Express
+* Prisma ORM
+* PostgreSQL
+* NextAuth
+* Google OAuth
+
+Storage
+
+* PostgreSQL
+* Cloudinary (images if needed)
+
+Deployment
+
+* Vercel
+* Neon PostgreSQL
+
+---
+
+# System Architecture
+
+```
+Aclipse Hub
+
+├── Public Website
+│      Home
+│      Weekly Quiz
+│      Results
+│      Blog (future)
+│      Store
+│
+├── Private Student Portal
+│      Login
+│      Dashboard
+│      Mock Exams
+│      Analytics
+│      Profile
+│
+└── Admin Portal
+       Dashboard
+       Students
+       Questions
+       Subjects
+       Exams
+       Analytics
+```
+
+Everything should use **one database**.
+
+---
+
+# User Roles
+
+There are four user roles.
+
+## 1. Visitor
+
+Can
+
+* browse homepage
+* take weekly free quiz
+* see score
+* buy PDFs
+* join premium class
+
+Cannot
+
+* access private exams
+
+---
+
+## 2. Student
+
+Can
+
+* login using Google
+* access paid quizzes
+* take CBT exams
+* view history
+* track progress
+
+Cannot
+
+* edit questions
+* manage users
+
+---
+
+## 3. Admin
+
+Can
+
+* approve students
+* create exams
+* write questions
+* publish quizzes
+* edit quizzes
+* manage subjects
+
+---
+
+## 4. Super Admin
+
+Has full access including
+
+* admin management
+* analytics
+* settings
+* platform configuration
+
+---
+
+# Website 1 — Public Platform
+
+Purpose
+
+Generate traffic and convert visitors into paying students.
+
+Pages
+
+## Home
+
+Contains
+
+* Hero section
+* About Aclipse Hub
+* CTA
+* Latest Weekly Quiz
+* Testimonials
+* Statistics
+* Footer
+
+---
+
+## Weekly Quiz Page
+
+Requirements
+
+* one quiz each week
+* timer
+* progress indicator
+* previous button
+* next button
+* mobile responsive
+* auto submit
+
+---
+
+## Results Page
+
+Display
+
+* score
+* percentage
+* corrections
+* explanation
+* recommendation
+
+Before viewing result
+
+Ask for
+
+* Full Name
+* Email
+
+Store both.
+
+---
+
+## Product Store
+
+Instead of building e-commerce,
+
+provide links to
+
+* Selar
+
+---
+
+# Website 2 — Private Platform
+
+Premium experience.
+
+No ads.
+
+Login required.
+
+---
+
+## Authentication
+
+Use
+
+Google OAuth only.
+
+No passwords.
+
+Flow
+
+```
+Google Login
+
+↓
+
+Fetch Email
+
+↓
+
+Check database
+
+↓
+
+If Approved
+
+Dashboard
+
+Else
+
+Not Enrolled Page
+```
+
+---
+
+# Dashboard
+
+Show
+
+* welcome message
+* available exams
+* completed exams
+* average score
+* progress graph
+* recent activity
+
+---
+
+# CBT Exam Interface
+
+Must resemble modern CBT platforms.
+
+Features
+
+* timer
+* question navigation
+* mark for review
+* next
+* previous
+* auto save
+* submit
+* confirmation dialog
+
+Support
+
+* images
+* diagrams
+* mathematics
+
+---
+
+# Results Dashboard
+
+Show
+
+Overall
+
+Subject performance
+
+Topic performance
+
+Strengths
+
+Weaknesses
+
+Historical charts
+
+Recommendations
+
+---
+
+# Admin Portal
+
+Admin should never touch code.
+
+Everything must be managed through UI.
+
+---
+
+## Student Management
+
+Features
+
+Add student
+
+Remove student
+
+Approve student
+
+Suspend student
+
+Search
+
+Filter
+
+Export CSV
+
+---
+
+## Question Management
+
+Questions contain
+
+Question
+
+Four options
+
+Correct answer
+
+Explanation
+
+Subject
+
+Topic
+
+Difficulty
+
+Tags
+
+Image attachment
+
+Year
+
+Status
+
+Draft
+
+Published
+
+Archived
+
+---
+
+# Question Workflow
+
+```
+Create
+
+↓
+
+Draft
+
+↓
+
+Review
+
+↓
+
+Approve
+
+↓
+
+Schedule
+
+↓
+
+Publish
+```
+
+Only approved questions become visible.
+
+---
+
+# Exam Builder
+
+Admin can
+
+Create Exam
+
+Select Subject
+
+Choose Questions
+
+Randomize
+
+Set Timer
+
+Set Passing Score
+
+Publish
+
+---
+
+# Weekly Quiz Scheduler
+
+Allow admin to
+
+Schedule quiz release
+
+Example
+
+Friday
+
+6 PM
+
+Automatically publish.
+
+---
+
+# Question Bank
+
+Every question remains permanently stored.
+
+Support
+
+Search
+
+Filter
+
+Reuse
+
+Duplicate
+
+Archive
+
+Categories
+
+Subject
+
+Topic
+
+Year
+
+Difficulty
+
+---
+
+# Database Design
+
+Design relational tables for
+
+Users
+
+Students
+
+Admins
+
+Subjects
+
+Topics
+
+Questions
+
+Options
+
+Exams
+
+ExamQuestions
+
+StudentAttempts
+
+Results
+
+Progress
+
+Announcements
+
+Settings
+
+AuditLogs
+
+---
+
+# Dashboard Analytics
+
+Admin dashboard should show
+
+Students
+
+Daily visitors
+
+Completed quizzes
+
+Average score
+
+Popular subjects
+
+Revenue (future)
+
+Quiz participation
+
+---
+
+# Security
+
+Implement
+
+Role-based access
+
+Protected routes
+
+Server-side validation
+
+Rate limiting
+
+CSRF protection
+
+Input sanitization
+
+Prisma validation
+
+---
+
+# Performance
+
+Use
+
+Server Components
+
+Lazy loading
+
+Image optimization
+
+Pagination
+
+Caching
+
+Optimistic UI
+
+---
+
+# Mobile Design
+
+Fully responsive.
+
+Support
+
+Desktop
+
+Tablet
+
+Mobile
+
+---
+
+# UI Style
+
+Modern educational platform.
+
+Colors
+
+Primary
+
+Blue
+
+Secondary
+
+White
+
+Accent
+
+Orange
+
+Rounded cards
+
+Soft shadows
+
+Minimalist interface
+
+Accessible typography
+
+---
+
+# Future Features (Design For Expansion)
+
+The architecture should support future additions without major rewrites.
+
+Future modules include:
+
+* Payment integration (Paystack)
+* Student subscriptions
+* Certificates
+* Leaderboards
+* Discussion forum
+* AI study assistant
+* Notifications (Email/SMS)
+* Mobile app (React Native)
+* Offline exam mode
+* Question import from Excel
+* PDF generation
+* Parent portal
+* Teacher portal
+* API for third-party integrations
+
+---
+
+# Deliverables
+
+Generate the project in phases.
+
+### Phase 1
+
+* Database schema
+* Prisma models
+* Authentication
+* User roles
+
+### Phase 2
+
+* Public website
+
+### Phase 3
+
+* Student dashboard
+
+### Phase 4
+
+* CBT engine
+
+### Phase 5
+
+* Admin dashboard
+
+### Phase 6
+
+* Analytics
+
+### Phase 7
+
+* Deployment
+
+---
+
+## Coding Standards
+
+* Write clean, modular, production-ready code.
+* Follow SOLID principles.
+* Use reusable components.
+* Use TypeScript throughout.
+* Keep components small and maintainable.
+* Include comments only where they improve understanding.
+* Build with scalability in mind so the platform can support tens of thousands of students.
+
+
+i am using neandb for database, my database is neondb, role is neondb_owner, connection string is stored in .env (never commit credentials — the previous one was exposed in git history and must be rotated)
