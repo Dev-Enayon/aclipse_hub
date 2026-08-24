@@ -237,7 +237,7 @@ export default async function AdminStudentProfilePage({
         </InfoSection>
 
         <InfoSection title="Account Information">
-          <Row label="Google Account Email" value={student.user.email} />
+          <Row label="Account Email" value={student.user.email} />
           <Row label="Authentication Provider" value={student.user.provider} />
           <Row label="Registration Date" value={fmtDate(student.enrolledAt)} />
           <Row label="Last Login" value={fmtDate(student.user.lastLoginAt)} />

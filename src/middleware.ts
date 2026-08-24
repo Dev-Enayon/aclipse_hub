@@ -9,15 +9,14 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Public routes that don't require authentication
-  const publicRoutes = ["/", "/login", "/quiz", "/store"];
+  const publicRoutes = ["/", "/login", "/store"];
   if (publicRoutes.includes(pathname)) {
     return NextResponse.next();
   }
 
   // API routes that don't require authentication
-  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/aloc")) {
-    // /api/aloc enforces its own auth rules (free quiz allows limited
-    // anonymous access; the route returns JSON 401 where sign-in is required)
+  // (/api/auth includes NextAuth handlers and the public signup endpoint)
+  if (pathname.startsWith("/api/auth")) {
     return NextResponse.next();
   }
 

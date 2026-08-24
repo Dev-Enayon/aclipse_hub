@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { signIn } from "next-auth/react";
 import {
   ACADEMIC_SESSIONS,
   CLASSES_BY_LEVEL,
@@ -67,7 +69,7 @@ const EMPTY_PROFILE: StudentProfileInput = {
   dreamJob: "",
 };
 
-function splitGoogleName(fullName: string): { surname: string; otherNames: string } {
+function splitFullName(fullName: string): { surname: string; otherNames: string } {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return { surname: "", otherNames: "" };
   if (parts.length === 1) return { surname: parts[0], otherNames: "" };
@@ -78,25 +80,45 @@ type Errors = Record<string, string>;
 
 export function OnboardingClient({
   initialData,
-  googleName,
-  googleEmail,
-  googleImage,
+  isAuthenticated,
+  accountName,
+  accountEmail,
+  accountImage,
 }: {
   initialData: StudentProfileInput | null;
-  googleName: string;
-  googleEmail: string;
-  googleImage: string;
+  isAuthenticated: boolean;
+  accountName: string;
+  accountEmail: string;
+  accountImage: string;
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<StudentProfileInput>(() => {
     if (initialData) return { ...EMPTY_PROFILE, ...initialData };
-    return { ...EMPTY_PROFILE, ...splitGoogleName(googleName) };
+    return { ...EMPTY_PROFILE, ...splitFullName(accountName) };
   });
   const [errors, setErrors] = useState<Errors>({});
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [submitting, setSubmitting] = useState(false);
   const [completed, setCompleted] = useState(false);
+
+  // Sign-up fields (only used for anonymous visitors creating an account)
+  const [signup, setSignup] = useState({
+    fullName: accountName,
+    email: accountEmail,
+    password: "",
+    confirmPassword: "",
+  });
+  const [signupError, setSignupError] = useState<string | null>(null);
+  const [accountCreating, setAccountCreating] = useState(false);
+
+  // Anonymous visitors get an extra "Create Account" step in front of the
+  // student information form.
+  const steps = useMemo<readonly string[]>(
+    () => (isAuthenticated ? ONBOARDING_STEPS : ["Create Account", ...ONBOARDING_STEPS]),
+    [isAuthenticated]
+  );
+  const profileStep = isAuthenticated ? step : step - 1;
 
   const update = <K extends keyof StudentProfileInput>(field: K, value: StudentProfileInput[K]) => {
     setData((prev) => ({ ...prev, [field]: value }));
@@ -145,12 +167,83 @@ export function OnboardingClient({
     }
   }
 
+  function validateAccount(): Errors {
+    const errs: Errors = {};
+    if (!signup.fullName.trim()) errs.fullName = "Full name is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signup.email.trim())) {
+      errs.email = "Enter a valid email address";
+    }
+    if (signup.password.length < 8) {
+      errs.password = "Password must be at least 8 characters";
+    }
+    if (signup.confirmPassword !== signup.password) {
+      errs.confirmPassword = "Passwords do not match";
+    }
+    return errs;
+  }
+
   async function handleContinue() {
-    const stepErrors = validateStep(step, data);
+    // Account creation step (anonymous visitors only)
+    if (!isAuthenticated && step === 0) {
+      const accountErrors = validateAccount();
+      setErrors(accountErrors);
+      if (Object.keys(accountErrors).length > 0) return;
+
+      setAccountCreating(true);
+      setSignupError(null);
+      try {
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: signup.fullName.trim(),
+            email: signup.email.trim(),
+            password: signup.password,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          if (res.status === 409) {
+            setSignupError(
+              (json.error || "An account with this email already exists.") +
+                " Sign in instead — you'll continue where you left off."
+            );
+          } else {
+            setSignupError(json.error || "Could not create your account. Please try again.");
+          }
+          return;
+        }
+
+        // Auto sign-in with the freshly created credentials
+        const result = await signIn("credentials", {
+          redirect: false,
+          email: signup.email.trim().toLowerCase(),
+          password: signup.password,
+        });
+        if (result?.error) {
+          setSignupError(
+            "Your account was created, but automatic sign-in failed. Please sign in manually."
+          );
+          return;
+        }
+
+        // Carry the entered name into the profile form
+        setData((prev) => ({ ...prev, ...splitFullName(signup.fullName.trim()) }));
+        setStep((s) => Math.min(s + 1, steps.length - 1));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch {
+        setSignupError("Network error. Please try again.");
+      } finally {
+        setAccountCreating(false);
+      }
+      return;
+    }
+
+    const stepErrors = validateStep(profileStep, data);
     setErrors(stepErrors);
     if (Object.keys(stepErrors).length > 0) return;
     await persist(false);
-    setStep((s) => Math.min(s + 1, ONBOARDING_STEPS.length - 1));
+    setStep((s) => Math.min(s + 1, steps.length - 1));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -166,14 +259,14 @@ export function OnboardingClient({
       setSubmitting(false);
       if (result.errors) {
         setErrors(result.errors);
-        const stepWithError = [
+        const profileIndexWithError = [
           () => Object.keys(validateStep(0, data)).some((k) => k in result.errors!),
           () => Object.keys(validateStep(1, data)).some((k) => k in result.errors!),
           () => Object.keys(validateStep(2, data)).some((k) => k in result.errors!),
           () => Object.keys(validateStep(3, data)).some((k) => k in result.errors!),
         ].findIndex((check) => check());
-        if (stepWithError >= 0) {
-          setStep(stepWithError);
+        if (profileIndexWithError >= 0) {
+          setStep(isAuthenticated ? profileIndexWithError : profileIndexWithError + 1);
           window.scrollTo({ top: 0, behavior: "smooth" });
         }
       }
@@ -193,7 +286,7 @@ export function OnboardingClient({
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Profile completed successfully!</h1>
-          <p className="text-gray-600 mb-6">Welcome aboard, {data.preferredName || data.otherNames || googleName}. Redirecting you to your dashboard...</p>
+          <p className="text-gray-600 mb-6">Welcome aboard, {data.preferredName || data.otherNames || accountName}. Redirecting you to your dashboard...</p>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
         </div>
       </div>
@@ -209,36 +302,61 @@ export function OnboardingClient({
             <span className="text-lg font-bold text-gray-900">Aclipse Hub</span>
           </div>
           <div className="flex items-center gap-3">
-            {googleImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={googleImage} alt="" className="w-9 h-9 rounded-full" referrerPolicy="no-referrer" />
+            {isAuthenticated ? (
+              <>
+                {accountImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={accountImage} alt="" className="w-9 h-9 rounded-full" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center text-white font-bold">
+                    {(accountName || "S").charAt(0)}
+                  </div>
+                )}
+                <span className="hidden sm:block text-sm text-gray-500">{accountEmail}</span>
+              </>
             ) : (
-              <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-                {(googleName || "S").charAt(0)}
-              </div>
+              <span className="text-sm text-gray-500">
+                Already have an account?{" "}
+                <Link href="/login" className="text-primary font-medium hover:underline">
+                  Sign in
+                </Link>
+              </span>
             )}
-            <span className="hidden sm:block text-sm text-gray-500">{googleEmail}</span>
           </div>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">Student Information Form</h1>
-          <p className="text-gray-600">Tell us about yourself so we can personalize your learning experience.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">
+            {isAuthenticated ? "Student Information Form" : "Create your account"}
+          </h1>
+          <p className="text-gray-600">
+            {isAuthenticated
+              ? "Tell us about yourself so we can personalize your learning experience."
+              : "Set up your login details, then tell us about yourself so we can personalize your learning experience."}
+          </p>
         </div>
 
-        <ProgressIndicator step={step} />
+        <ProgressIndicator step={step} steps={steps} />
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 mt-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">
-            Step {step + 1}: {ONBOARDING_STEPS[step]}
+            Step {step + 1}: {steps[step]}
           </h2>
 
-          {step === 0 && (
+          {!isAuthenticated && step === 0 && (
+            <AccountStep
+              signup={signup}
+              setSignup={setSignup}
+              errors={errors}
+              signupError={signupError}
+            />
+          )}
+          {(isAuthenticated ? step === 0 : profileStep === 0) && (
             <PersonalStep data={data} errors={errors} update={update} lgas={lgas} />
           )}
-          {step === 1 && (
+          {profileStep === 1 && (
             <AcademicStep
               data={data}
               errors={errors}
@@ -248,17 +366,21 @@ export function OnboardingClient({
               isJambite={isJambite}
             />
           )}
-          {step === 2 && (
+          {profileStep === 2 && (
             <AdditionalStep data={data} errors={errors} update={update} />
           )}
-          {step === 3 && (
+          {profileStep === 3 && (
             <GuardianStep data={data} errors={errors} update={update} />
           )}
-          {step === 4 && (
+          {profileStep === 4 && (
             <ProfileStep data={data} update={update} />
           )}
-          {step === 5 && (
-            <ReviewStep data={data} goToStep={(s) => setStep(s)} isJambite={isJambite} />
+          {profileStep === 5 && (
+            <ReviewStep
+              data={data}
+              goToStep={(s) => setStep(isAuthenticated ? s : s + 1)}
+              isJambite={isJambite}
+            />
           )}
 
           <div className="flex items-center justify-between gap-4 mt-8 pt-6 border-t border-gray-100">
@@ -272,7 +394,7 @@ export function OnboardingClient({
                   Back
                 </button>
               )}
-              {step < 5 && (
+              {(isAuthenticated ? step < 5 : step > 0 && step < steps.length - 1) && (
                 <button
                   type="button"
                   onClick={() => persist(false)}
@@ -287,13 +409,14 @@ export function OnboardingClient({
               )}
             </div>
 
-            {step < 5 ? (
+            {step < steps.length - 1 ? (
               <button
                 type="button"
                 onClick={handleContinue}
-                className="px-6 py-2.5 rounded-lg bg-primary text-white hover:bg-blue-700 transition-colors font-medium"
+                disabled={accountCreating}
+                className="px-6 py-2.5 rounded-lg bg-primary text-white hover:bg-blue-700 transition-colors font-medium disabled:opacity-60"
               >
-                Continue
+                {accountCreating ? "Creating account…" : "Continue"}
               </button>
             ) : (
               <button
@@ -312,12 +435,12 @@ export function OnboardingClient({
   );
 }
 
-function ProgressIndicator({ step }: { step: number }) {
-  const percent = ((step + 1) / ONBOARDING_STEPS.length) * 100;
+function ProgressIndicator({ step, steps }: { step: number; steps: readonly string[] }) {
+  const percent = ((step + 1) / steps.length) * 100;
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        {ONBOARDING_STEPS.map((label, i) => (
+        {steps.map((label, i) => (
           <div key={label} className={`flex items-center ${i <= step ? "text-primary" : "text-gray-400"}`}>
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -334,7 +457,7 @@ function ProgressIndicator({ step }: { step: number }) {
         ))}
       </div>
       <div className="hidden sm:flex items-center justify-between text-xs text-gray-500 -mt-1 px-1">
-        {ONBOARDING_STEPS.map((label, i) => (
+        {steps.map((label, i) => (
           <span key={label} className={i === step ? "font-semibold text-primary" : ""}>
             {label.split(" ")[0]}
           </span>
@@ -343,6 +466,73 @@ function ProgressIndicator({ step }: { step: number }) {
       <div className="w-full bg-gray-200 rounded-full h-1.5 mt-3">
         <div className="bg-primary h-1.5 rounded-full transition-all duration-300" style={{ width: `${percent}%` }}></div>
       </div>
+    </div>
+  );
+}
+
+function AccountStep({
+  signup,
+  setSignup,
+  errors,
+  signupError,
+}: {
+  signup: { fullName: string; email: string; password: string; confirmPassword: string };
+  setSignup: React.Dispatch<React.SetStateAction<{ fullName: string; email: string; password: string; confirmPassword: string }>>;
+  errors: Errors;
+  signupError: string | null;
+}) {
+  return (
+    <div className="space-y-5">
+      <Field label="Full Name" required error={errors.fullName}>
+        <input
+          type="text"
+          value={signup.fullName}
+          onChange={(e) => setSignup((s) => ({ ...s, fullName: e.target.value }))}
+          className={inputCls(errors.fullName)}
+          placeholder="e.g. Chidera Grace Okafor"
+        />
+      </Field>
+
+      <Field label="Email Address" required error={errors.email} hint="You will use this to sign in.">
+        <input
+          type="email"
+          value={signup.email}
+          onChange={(e) => setSignup((s) => ({ ...s, email: e.target.value }))}
+          className={inputCls(errors.email)}
+          placeholder="you@example.com"
+        />
+      </Field>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <Field label="Password" required error={errors.password} hint="At least 8 characters.">
+          <input
+            type="password"
+            value={signup.password}
+            onChange={(e) => setSignup((s) => ({ ...s, password: e.target.value }))}
+            className={inputCls(errors.password)}
+            placeholder="••••••••"
+          />
+        </Field>
+        <Field label="Confirm Password" required error={errors.confirmPassword}>
+          <input
+            type="password"
+            value={signup.confirmPassword}
+            onChange={(e) => setSignup((s) => ({ ...s, confirmPassword: e.target.value }))}
+            className={inputCls(errors.confirmPassword)}
+            placeholder="••••••••"
+          />
+        </Field>
+      </div>
+
+      {signupError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+          {signupError}
+        </div>
+      )}
+
+      <p className="text-xs text-gray-400">
+        By creating an account you agree to our Terms of Service and Privacy Policy.
+      </p>
     </div>
   );
 }

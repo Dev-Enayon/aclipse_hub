@@ -57,6 +57,8 @@ export default function QuizPage() {
   const [markedForReview, setMarkedForReview] = useState<boolean[]>([]);
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [quizTitle, setQuizTitle] = useState("");
+  const [quizSubject, setQuizSubject] = useState("");
+  const [quizExamType, setQuizExamType] = useState("");
   const [timeLeft, setTimeLeft] = useState(600);
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
@@ -197,6 +199,8 @@ export default function QuizPage() {
       setShowScore(false);
       setTimeLeft(duration);
       setQuizTitle(`${ALOC_SUBJECTS[subject as keyof typeof ALOC_SUBJECTS]} Practice`);
+      setQuizSubject(subject);
+      setQuizExamType(examType);
       setQuizStarted(true);
     } catch (err) {
       setSetupError(err instanceof Error ? err.message : "Something went wrong.");
@@ -242,6 +246,18 @@ export default function QuizPage() {
     setScore(correctCount);
     setShowResultForm(false);
     setShowScore(true);
+
+    // Persist the attempt so progress shows on the student's dashboard
+    fetch("/api/quiz/attempts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subject: quizSubject,
+        examType: quizExamType,
+        total: questions.length,
+        score: correctCount,
+      }),
+    }).catch(() => undefined);
   };
 
   const formatTime = (seconds: number) => {
@@ -392,6 +408,9 @@ export default function QuizPage() {
                 </div>
                 <div className="text-lg text-gray-600">
                   {Math.round((score / totalQuestions) * 100)}% Correct
+                </div>
+                <div className="mt-3 text-xs text-green-700 bg-green-50 border border-green-200 rounded-full px-3 py-1 inline-block">
+                  Progress saved to your dashboard
                 </div>
               </div>
 

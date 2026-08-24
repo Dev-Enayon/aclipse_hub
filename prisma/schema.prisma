@@ -24,11 +24,25 @@ model User {
   student       Student?
   admin         Admin?
   attempts      StudentAttempt[]
+  quizAttempts  QuizAttempt[]
   auditLogs     AuditLog[]
   accounts      Account[]
   sessions      Session[]
 
   @@map("users")
+}
+
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   String // ALOC subject slug (e.g. "chemistry")
+  examType  String // utme | wassce | post-utme | "" for mixed
+  total     Int // number of questions in the quiz
+  score     Int // number answered correctly
+  createdAt DateTime @default(now())
+
+  @@map("quiz_attempts")
 }
 
 model Account {

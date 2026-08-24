@@ -5,41 +5,48 @@ import { studentToProfileInput } from "@/lib/student-mapper";
 import { OnboardingClient } from "./onboarding-client";
 
 export const metadata = {
-  title: "Complete Your Profile - Aclipse Hub",
+  title: "Sign Up - Aclipse Hub",
 };
 
+// Public sign-up page: visitors create an account and complete the student
+// information form in one flow. Signed-in users land here only when their
+// profile is still incomplete.
 export default async function OnboardingPage() {
   const session = await auth();
 
-  if (!session?.user) {
-    redirect("/login?callbackUrl=/onboarding");
-  }
+  if (session?.user?.id) {
+    // Admins never fill the student form — send them to their dashboard
+    const role = session.user.role;
+    if (role === "ADMIN" || role === "SUPER_ADMIN") {
+      redirect("/admin/dashboard");
+    }
 
-  const userId = session.user.id;
-  if (!userId) {
-    redirect("/login?callbackUrl=/onboarding");
-  }
+    const student = await prisma.student.findUnique({
+      where: { userId: session.user.id },
+    });
 
-  // Admins never fill the student form — send them to their dashboard
-  const role = session.user.role;
-  if (role === "ADMIN" || role === "SUPER_ADMIN") {
-    redirect("/admin/dashboard");
-  }
+    if (student?.profileCompleted) {
+      redirect("/dashboard");
+    }
 
-  const student = await prisma.student.findUnique({
-    where: { userId },
-  });
-
-  if (student?.profileCompleted) {
-    redirect("/dashboard");
+    return (
+      <OnboardingClient
+        initialData={student ? studentToProfileInput(student) : null}
+        isAuthenticated={true}
+        accountName={session.user.name ?? ""}
+        accountEmail={session.user.email ?? ""}
+        accountImage={session.user.image ?? ""}
+      />
+    );
   }
 
   return (
     <OnboardingClient
-      initialData={student ? studentToProfileInput(student) : null}
-      googleName={session.user.name ?? ""}
-      googleEmail={session.user.email ?? ""}
-      googleImage={session.user.image ?? ""}
+      initialData={null}
+      isAuthenticated={false}
+      accountName=""
+      accountEmail=""
+      accountImage=""
     />
   );
 }
