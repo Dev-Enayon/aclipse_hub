@@ -22,6 +22,7 @@ import {
 import { NIGERIAN_STATES, NIGERIA_STATE_LGAS } from "@/lib/nigeria";
 import { PhoneInput } from "@/components/onboarding/phone-input";
 import { MultiSelect } from "@/components/onboarding/multi-select";
+import { Logo } from "@/components/logo";
 
 const HOBBY_SUGGESTIONS = ["Reading", "Football", "Basketball", "Music", "Chess", "Drawing", "Coding", "Swimming", "Dancing", "Writing"];
 const INTEREST_SUGGESTIONS = ["Science & Technology", "Business & Finance", "Arts & Design", "Medicine & Health", "Law", "Engineering", "Media & Communication", "Sports", "Agriculture", "Education"];
@@ -204,9 +205,7 @@ export function OnboardingClient({
       <header className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
+            <Logo className="w-8 h-8 rounded-lg" />
             <span className="text-lg font-bold text-gray-900">Aclipse Hub</span>
           </div>
           <div className="flex items-center gap-3">

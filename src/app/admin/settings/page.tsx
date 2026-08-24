@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Logo } from "@/components/logo";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
@@ -102,9 +103,7 @@ export default function SettingsPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">Logo</label>
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center">
-                        <span className="text-white font-bold text-2xl">A</span>
-                      </div>
+                      <Logo className="w-16 h-16 rounded-xl" />
                       <button className="text-primary hover:text-blue-700 font-medium">
                         Change Logo
                       </button>

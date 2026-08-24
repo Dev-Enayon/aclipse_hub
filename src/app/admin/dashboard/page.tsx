@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 
 interface Stats {
   totalStudents: number;
@@ -63,9 +64,7 @@ export default function AdminDashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">A</span>
-              </div>
+              <Logo className="w-10 h-10 rounded-full" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">Admin Dashboard</h1>
                 <p className="text-sm text-gray-500">Manage Aclipse Hub</p>

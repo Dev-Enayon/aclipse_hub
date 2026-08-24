@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 
 export function DashboardClient() {
   const { data: session, status } = useSession();
@@ -116,9 +117,7 @@ export function DashboardClient() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">A</span>
-                </div>
+                <Logo className="w-8 h-8 rounded-lg" />
                 <span className="text-xl font-bold text-gray-900 hidden sm:block">Aclipse Hub</span>
               </Link>
               <div className="hidden md:block h-8 w-px bg-gray-200"></div>

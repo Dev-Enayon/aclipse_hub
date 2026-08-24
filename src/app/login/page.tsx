@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { Logo } from "@/components/logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,9 +45,7 @@ export default function LoginPage() {
         <div className="max-w-md w-full mx-4">
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white font-bold text-2xl">A</span>
-              </div>
+              <Logo className="w-16 h-16 rounded-full mx-auto mb-4" />
               <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
               <p className="text-gray-600 mt-2">
                 Sign in to access your premium exams and track your progress.
