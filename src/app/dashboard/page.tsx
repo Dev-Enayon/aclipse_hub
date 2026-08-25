@@ -52,5 +52,10 @@ export default async function DashboardPage() {
     .update({ where: { id: userId }, data: { lastActiveAt: new Date() } })
     .catch(() => undefined);
 
-  return <DashboardClient />;
+  return (
+    <DashboardClient
+      userName={session.user.name ?? "Student"}
+      userEmail={session.user.email ?? ""}
+    />
+  );
 }

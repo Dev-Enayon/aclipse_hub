@@ -202,6 +202,13 @@ export default function QuizPage() {
       setQuizSubject(subject);
       setQuizExamType(examType);
       setQuizStarted(true);
+
+      // Log quiz_started activity (fire-and-forget, client → API)
+      fetch("/api/student/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "quiz_started", subject, examType, total: mapped.length }),
+      }).catch(() => undefined);
     } catch (err) {
       setSetupError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {

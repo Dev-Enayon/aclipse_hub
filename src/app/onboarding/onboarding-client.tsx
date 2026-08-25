@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
@@ -274,7 +274,22 @@ export function OnboardingClient({
     }
     setCompleted(true);
     setSubmitting(false);
+
+    // Log profile_completed activity (fire-and-forget)
+    fetch("/api/student/activity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "profile_completed" }),
+    }).catch(() => undefined);
   }
+
+  // Redirect to dashboard after onboarding is completed
+  useEffect(() => {
+    if (completed) {
+      const timer = setTimeout(() => router.push("/dashboard"), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [completed, router]);
 
   if (completed) {
     return (

@@ -25,12 +25,26 @@ model User {
   admin         Admin?
   attempts      StudentAttempt[]
   quizAttempts  QuizAttempt[]
+  activities    Activity[]
   auditLogs     AuditLog[]
   accounts      Account[]
   sessions      Session[]
   passwordResetTokens PasswordResetToken[]
 
   @@map("users")
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // quiz_started, quiz_completed, profile_completed, login
+  subject   String?  // subject slug if relevant
+  details   String   @default("{}") // JSON metadata (score, examType, etc.)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("activities")
 }
 
 model PasswordResetToken {

@@ -55,5 +55,17 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  // Log quiz_completed activity (fire-and-forget)
+  prisma.activity
+    .create({
+      data: {
+        userId: session.user.id,
+        type: "quiz_completed",
+        subject,
+        details: JSON.stringify({ subject, examType, total, score }),
+      },
+    })
+    .catch(() => undefined);
+
   return NextResponse.json({ ok: true, id: attempt.id });
 }
