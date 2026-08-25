@@ -9,8 +9,9 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Public routes that don't require authentication
-  // (/onboarding doubles as the public sign-up page)
-  const publicRoutes = ["/", "/login", "/onboarding", "/store"];
+  // (/onboarding doubles as the public sign-up page; /forgot-password and
+  // /reset-password must be reachable while signed out)
+  const publicRoutes = ["/", "/login", "/onboarding", "/forgot-password", "/reset-password", "/store"];
   if (publicRoutes.includes(pathname)) {
     return NextResponse.next();
   }
