@@ -266,7 +266,11 @@ export default function AdminStudentsPage() {
                         </span>
                       </Link>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 max-w-[180px] truncate">{student.email}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm max-w-[180px] truncate">
+                      <Link href={`/admin/students/${student.id}/performance`} className="text-primary hover:text-blue-700 hover:underline">
+                        {student.email}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 max-w-[140px] truncate">{student.schoolName || "—"}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{levelLabel(student.schoolLevel)}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{student.classLevel || "—"}</td>
