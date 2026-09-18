@@ -12,7 +12,7 @@ model User {
   email         String    @unique
   name          String?
   image         String?
-  role          String    @default("VISITOR") // VISITOR, STUDENT, ADMIN, SUPER_ADMIN
+  role          String    @default("VISITOR") // VISITOR, STUDENT, ADMIN, SUB_ADMIN, SUPER_ADMIN
   provider      String    @default("google") // authentication provider
   passwordHash  String? // scrypt "salt:hash" — set only for credentials-based accounts (e.g. admin)
   emailVerified DateTime?
@@ -27,6 +27,7 @@ model User {
   quizAttempts  QuizAttempt[]
   activities    Activity[]
   questions     Question[]     @relation("QuestionAuthor")
+  reviewedQuestions Question[] @relation("QuestionReviewer")
   exams         Exam[]         @relation("ExamAuthor")
   weeklyQuizzes WeeklyQuiz[]   @relation("QuizAuthor")
   adminActivityLogs AdminActivityLog[]
@@ -179,6 +180,7 @@ model Admin {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   permissions String   @default("[]") // JSON array of permissions
   department  String?  // department or focus area
+  status      String   @default("ACTIVE") // ACTIVE, SUSPENDED
 
   @@map("admins")
 }
@@ -227,9 +229,13 @@ model Question {
   tags            String    @default("[]") // JSON array of tags
   year            Int?
   imageUrl        String?
-  status          String    @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  status          String    @default("DRAFT") // DRAFT, PENDING_REVIEW, APPROVED, REJECTED, PUBLISHED, ARCHIVED
   createdBy       String?
   author          User?     @relation("QuestionAuthor", fields: [createdBy], references: [id], onDelete: SetNull)
+  reviewedBy      String?
+  reviewer        User?     @relation("QuestionReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  reviewedAt      DateTime?
+  reviewFeedback  String? // set when REJECTED — feedback for the Sub-Admin author
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

@@ -11,6 +11,7 @@ interface SidebarProps {
   role: string;
   superAdminLinks: { label: string; href: string }[];
   adminLinks: { label: string; href: string }[];
+  subAdminLinks?: { label: string; href: string }[];
 }
 
 function NavList({
@@ -51,11 +52,19 @@ export function AdminSidebar({
   role,
   superAdminLinks,
   adminLinks,
+  subAdminLinks,
 }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-  const links = role === "SUPER_ADMIN" ? superAdminLinks : adminLinks;
-  const badgeLabel = role === "SUPER_ADMIN" ? "Head Admin" : "Admin";
+  const links =
+    role === "SUPER_ADMIN" ? superAdminLinks : role === "SUB_ADMIN" && subAdminLinks ? subAdminLinks : adminLinks;
+  const badgeLabel = role === "SUPER_ADMIN" ? "Head Admin" : role === "SUB_ADMIN" ? "Sub-Admin" : "Admin";
+  const badgeCls =
+    role === "SUPER_ADMIN"
+      ? "bg-purple-100 text-purple-700"
+      : role === "SUB_ADMIN"
+      ? "bg-teal-100 text-teal-700"
+      : "bg-blue-100 text-blue-700";
 
   const sidebarInner = (
     <>
@@ -70,11 +79,7 @@ export function AdminSidebar({
       {/* Role Badge */}
       <div className="px-6 pt-5 pb-2">
         <span
-          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-            role === "SUPER_ADMIN"
-              ? "bg-purple-100 text-purple-700"
-              : "bg-blue-100 text-blue-700"
-          }`}
+          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${badgeCls}`}
         >
           {badgeLabel}
         </span>

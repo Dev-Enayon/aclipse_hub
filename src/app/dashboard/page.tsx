@@ -22,6 +22,10 @@ export default async function DashboardPage() {
     redirect("/login?callbackUrl=/dashboard");
   }
 
+  if (userRole === "SUB_ADMIN") {
+    redirect("/sub-admin/dashboard");
+  }
+
   const student = await prisma.student.findUnique({
     where: { userId },
   });

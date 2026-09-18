@@ -61,7 +61,7 @@ function fmtDate(d: string) {
 
 export default function StudentPerformancePage() {
   const params = useParams();
-  const userId = params.userId as string;
+  const userId = params.id as string;
   const { data: session } = useSession();
 
   const [data, setData] = useState<PerformanceData | null>(null);

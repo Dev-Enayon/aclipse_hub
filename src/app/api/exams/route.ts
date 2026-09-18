@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import type { Session } from "next-auth";
+import { filterExamToPublishedQuestions, publicExamQuestion } from "@/lib/public-questions";
 
 function isAdmin(session: Session | null): boolean {
   const role = session?.user?.role;
@@ -29,20 +30,16 @@ export async function GET() {
       return NextResponse.json(exams);
     }
 
-    const sanitized = exams.map((exam) => ({
-      ...exam,
-      questions: exam.questions.map(({ question, ...eq }) => ({
-        ...eq,
-        question: {
-          id: question.id,
-          text: question.text,
-          options: question.options,
-          difficulty: question.difficulty,
-          tags: question.tags,
-          year: question.year,
-        },
-      })),
-    }));
+    const sanitized = exams.map((exam) => {
+      const publicExam = filterExamToPublishedQuestions(exam);
+      return {
+        ...publicExam,
+        questions: publicExam.questions.map(({ question, ...eq }) => ({
+          ...eq,
+          question: question ? publicExamQuestion(question) : null,
+        })),
+      };
+    });
 
     return NextResponse.json(sanitized);
   } catch {

@@ -4,14 +4,14 @@ import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const admin = await requireAdmin();
   if (!admin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { userId } = await params;
+  const { id: userId } = await params;
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
