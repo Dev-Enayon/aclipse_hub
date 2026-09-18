@@ -23,7 +23,6 @@ model User {
 
   student       Student?
   admin         Admin?
-  managedStudents Student[]   @relation("StudentAdmin") // students assigned to this admin
   attempts      StudentAttempt[]
   quizAttempts  QuizAttempt[]
   activities    Activity[]
@@ -168,9 +167,6 @@ model Student {
   interests      String  @default("[]") // JSON string array
   careerAmbition String?
   dreamJob       String?
-
-  assignedAdminId String?
-  assignedAdmin   User?   @relation("StudentAdmin", fields: [assignedAdminId], references: [id], onDelete: SetNull)
 
   attempts    StudentAttempt[]
 
@@ -379,7 +375,7 @@ model AdminActivityLog {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   action    String   // login, logout, question_created, question_edited, question_deleted, question_published, exam_created, exam_edited, student_viewed, student_assigned, student_unassigned, etc.
-  targetType String?  // question, exam, student, sub_admin, system
+  targetType String?  // question, exam, student, system
   targetId  String?  // ID of the affected resource
   details   String   @default("{}") // JSON details (name, email, etc.)
   ipAddress String?

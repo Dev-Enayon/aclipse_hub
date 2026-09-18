@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 
-/** GET: admin activity logs — Head Admin sees all, Sub-Admin sees own */
+/** GET: admin activity logs */
 export async function GET(request: NextRequest) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -16,12 +16,7 @@ export async function GET(request: NextRequest) {
   const take = Math.min(Number(searchParams.get("take") ?? "100"), 500);
 
   const where: Record<string, unknown> = {};
-  // Sub-Admin can only see their own logs
-  if (admin.role !== "SUPER_ADMIN") {
-    where.userId = admin.userId;
-  } else if (userId) {
-    where.userId = userId;
-  }
+  if (userId) where.userId = userId;
 
   if (action) where.action = action;
   if (targetType) where.targetType = targetType;

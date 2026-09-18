@@ -1,5 +1,4 @@
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 
 export type AuthRole = "VISITOR" | "STUDENT" | "ADMIN" | "SUPER_ADMIN";
 
@@ -34,30 +33,4 @@ export async function isHeadAdmin(): Promise<boolean> {
   return admin?.role === "SUPER_ADMIN";
 }
 
-/**
- * Checks that the current user has access to the given student.
- * SUPER_ADMIN always has access. ADMIN (Sub-Admin) only has access
- * to students where assignedAdminId matches their userId.
- */
-export async function canAccessStudent(studentUserId: string): Promise<boolean> {
-  const admin = await requireAdmin();
-  if (!admin) return false;
-  if (admin.role === "SUPER_ADMIN") return true;
 
-  const student = await prisma.student.findUnique({
-    where: { userId: studentUserId },
-    select: { assignedAdminId: true },
-  });
-  return student?.assignedAdminId === admin.userId;
-}
-
-/**
- * Returns the WHERE clause to filter students by admin assignment.
- * SUPER_ADMIN sees all students. ADMIN (Sub-Admin) sees only assigned students.
- */
-export async function studentWhereForAdmin(): Promise<Record<string, unknown>> {
-  const admin = await requireAdmin();
-  if (!admin) return { id: "__none__" };
-  if (admin.role === "SUPER_ADMIN") return {};
-  return { assignedAdminId: admin.userId };
-}

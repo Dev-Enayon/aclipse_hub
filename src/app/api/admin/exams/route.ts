@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { logAdminActivity } from "@/lib/activity-logger";
 
-/** GET: list exams — Sub-Admin sees own, Head Admin sees all */
+/** GET: list exams */
 export async function GET(request: NextRequest) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
   const subjectId = searchParams.get("subjectId");
 
   const where: Record<string, unknown> = {};
-  if (admin.role !== "SUPER_ADMIN") where.createdBy = admin.userId;
   if (status) where.status = status;
   if (subjectId) where.subjectId = subjectId;
 

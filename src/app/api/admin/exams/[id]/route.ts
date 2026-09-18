@@ -24,9 +24,6 @@ export async function GET(
   });
 
   if (!exam) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (admin.role !== "SUPER_ADMIN" && exam.createdBy !== admin.userId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   return NextResponse.json({
     exam: {
@@ -57,9 +54,6 @@ export async function PATCH(
   const { id } = await params;
   const existing = await prisma.exam.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (admin.role !== "SUPER_ADMIN" && existing.createdBy !== admin.userId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   let body: Record<string, unknown>;
   try {
@@ -110,9 +104,6 @@ export async function DELETE(
   const { id } = await params;
   const existing = await prisma.exam.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (admin.role !== "SUPER_ADMIN" && existing.createdBy !== admin.userId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   await prisma.exam.delete({ where: { id } });
 

@@ -21,11 +21,6 @@ export async function GET(
   const question = await getQuestion(id);
   if (!question) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Sub-Admin can only view their own questions
-  if (admin.role !== "SUPER_ADMIN" && question.createdBy !== admin.userId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
   return NextResponse.json({
     question: {
       ...question,
@@ -45,10 +40,6 @@ export async function PATCH(
   const { id } = await params;
   const existing = await prisma.question.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  if (admin.role !== "SUPER_ADMIN" && existing.createdBy !== admin.userId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   let body: Record<string, unknown>;
   try {
@@ -91,10 +82,6 @@ export async function DELETE(
   const { id } = await params;
   const existing = await prisma.question.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  if (admin.role !== "SUPER_ADMIN" && existing.createdBy !== admin.userId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   await prisma.question.delete({ where: { id } });
 

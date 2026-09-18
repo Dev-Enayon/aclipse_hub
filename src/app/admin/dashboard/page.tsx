@@ -98,22 +98,12 @@ export default function AdminDashboardPage() {
   const isSuperAdmin = role === "SUPER_ADMIN";
   const userName = session?.user?.name ?? "Admin";
 
-  const superAdminActions = [
+  const quickActions = [
     { title: "Manage Students", description: "View, filter, and manage all students", href: "/admin/students", icon: "👥", bg: "bg-blue-50" },
-    { title: "Manage Sub-Admins", description: "Add, edit, and manage sub-admin accounts", href: "/admin/sub-admins", icon: "🔑", bg: "bg-purple-50" },
     { title: "Question Bank", description: "Create, edit, and manage questions", href: "/admin/questions", icon: "❓", bg: "bg-green-50" },
     { title: "Exams", description: "Build and publish exam papers", href: "/admin/exams", icon: "📝", bg: "bg-orange-50" },
     { title: "Activity Log", description: "Review admin and system activity", href: "/admin/activity-log", icon: "📋", bg: "bg-gray-50" },
   ];
-
-  const subAdminActions = [
-    { title: "My Students", description: "View and manage your assigned students", href: "/admin/students", icon: "👥", bg: "bg-blue-50" },
-    { title: "Question Bank", description: "Create, edit, and manage questions", href: "/admin/questions", icon: "❓", bg: "bg-green-50" },
-    { title: "Exams", description: "Build and publish exam papers", href: "/admin/exams", icon: "📝", bg: "bg-orange-50" },
-    { title: "Activity Log", description: "Review your activity history", href: "/admin/activity-log", icon: "📋", bg: "bg-gray-50" },
-  ];
-
-  const quickActions = isSuperAdmin ? superAdminActions : subAdminActions;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -128,7 +118,7 @@ export default function AdminDashboardPage() {
                 : "bg-blue-100 text-blue-700"
             }`}
           >
-            {isSuperAdmin ? "Head Admin" : "Sub-Admin"}
+            {isSuperAdmin ? "Head Admin" : "Admin"}
           </span>
         </div>
 
@@ -180,14 +170,6 @@ export default function AdminDashboardPage() {
                 color="text-blue-600"
                 icon="📝"
               />
-              {isSuperAdmin && (
-                <StatCard
-                  label="Sub-Admins"
-                  value="—"
-                  color="text-purple-600"
-                  icon="🔑"
-                />
-              )}
             </div>
 
             {/* Recent Activity */}

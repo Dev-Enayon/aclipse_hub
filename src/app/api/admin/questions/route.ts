@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { logAdminActivity } from "@/lib/activity-logger";
 
-/** GET: list questions — Sub-Admin sees own, Head Admin sees all */
+/** GET: list questions */
 export async function GET(request: NextRequest) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -14,10 +14,6 @@ export async function GET(request: NextRequest) {
   const examId = searchParams.get("examId");
 
   const where: Record<string, unknown> = {};
-  // Sub-Admin only sees their own questions
-  if (admin.role !== "SUPER_ADMIN") {
-    where.createdBy = admin.userId;
-  }
   if (subjectId) where.subjectId = subjectId;
   if (status) where.status = status;
 

@@ -18,12 +18,6 @@ interface ActivityLog {
   createdAt: string;
 }
 
-interface SubAdmin {
-  id: string;
-  name: string;
-  email: string;
-}
-
 const ACTION_TYPES = [
   "login",
   "logout",
@@ -34,11 +28,6 @@ const ACTION_TYPES = [
   "exam_created",
   "exam_edited",
   "student_viewed",
-  "student_assigned",
-  "student_unassigned",
-  "sub_admin_created",
-  "sub_admin_edited",
-  "sub_admin_deleted",
 ];
 
 function formatAction(action: string): string {
@@ -87,19 +76,14 @@ const selectCls =
   "px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-900 max-w-full";
 
 export default function ActivityLogPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [subAdmins, setSubAdmins] = useState<SubAdmin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [filterAdmin, setFilterAdmin] = useState("");
   const [filterAction, setFilterAction] = useState("");
-
-  const role = session?.user?.role;
-  const isSuperAdmin = role === "SUPER_ADMIN";
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -120,28 +104,15 @@ export default function ActivityLogPage() {
     }
   }, []);
 
-  const loadSubAdmins = useCallback(async () => {
-    try {
-      const res = await fetch("/api/admin/sub-admins");
-      if (!res.ok) throw new Error(String(res.status));
-      const data = await res.json();
-      setSubAdmins(data.admins);
-    } catch {
-      // silently fail - filter dropdown just won't populate
-    }
-  }, []);
-
   useEffect(() => {
     if (status === "authenticated") {
       loadLogs();
-      if (isSuperAdmin) loadSubAdmins();
     }
-  }, [status, isSuperAdmin, loadLogs, loadSubAdmins]);
+  }, [status, loadLogs]);
 
   const filtered = logs.filter((log) => {
-    const matchAdmin = !filterAdmin || log.userId === filterAdmin;
     const matchAction = !filterAction || log.action === filterAction;
-    return matchAdmin && matchAction;
+    return matchAction;
   });
 
   if (status === "loading") {
@@ -168,20 +139,6 @@ export default function ActivityLogPage() {
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-3">
-            {isSuperAdmin && (
-              <select
-                value={filterAdmin}
-                onChange={(e) => setFilterAdmin(e.target.value)}
-                className={selectCls}
-              >
-                <option value="">All Admins</option>
-                {subAdmins.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
-            )}
             <select
               value={filterAction}
               onChange={(e) => setFilterAction(e.target.value)}
@@ -194,12 +151,9 @@ export default function ActivityLogPage() {
                 </option>
               ))}
             </select>
-            {(filterAdmin || filterAction) && (
+            {filterAction && (
               <button
-                onClick={() => {
-                  setFilterAdmin("");
-                  setFilterAction("");
-                }}
+                onClick={() => setFilterAction("")}
                 className="text-sm text-red-600 hover:text-red-800 font-medium"
               >
                 Clear all

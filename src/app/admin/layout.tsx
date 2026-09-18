@@ -4,9 +4,7 @@ import { AdminSidebar } from "@/components/admin/sidebar";
 
 const SUPER_ADMIN_LINKS = [
   { label: "Dashboard", href: "/admin/dashboard" },
-  { label: "Sub-Admins", href: "/admin/sub-admins" },
   { label: "All Students", href: "/admin/students" },
-  { label: "Student Assignments", href: "/admin/assignments" },
   { label: "Premium Access", href: "/admin/premium-access" },
   { label: "Questions", href: "/admin/questions" },
   { label: "Exams", href: "/admin/exams" },
@@ -16,7 +14,7 @@ const SUPER_ADMIN_LINKS = [
 
 const ADMIN_LINKS = [
   { label: "Dashboard", href: "/admin/dashboard" },
-  { label: "My Students", href: "/admin/students" },
+  { label: "Students", href: "/admin/students" },
   { label: "Premium Access", href: "/admin/premium-access" },
   { label: "Questions", href: "/admin/questions" },
   { label: "Exams", href: "/admin/exams" },

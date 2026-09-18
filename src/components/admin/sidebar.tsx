@@ -55,7 +55,7 @@ export function AdminSidebar({
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const links = role === "SUPER_ADMIN" ? superAdminLinks : adminLinks;
-  const badgeLabel = role === "SUPER_ADMIN" ? "Head Admin" : "Sub-Admin";
+  const badgeLabel = role === "SUPER_ADMIN" ? "Head Admin" : "Admin";
 
   const sidebarInner = (
     <>

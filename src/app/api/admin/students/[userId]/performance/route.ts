@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin, canAccessStudent } from "@/lib/admin-auth";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET(
   _request: NextRequest,
@@ -12,13 +12,6 @@ export async function GET(
   }
 
   const { userId } = await params;
-
-  if (admin.role !== "SUPER_ADMIN") {
-    const allowed = await canAccessStudent(userId);
-    if (!allowed) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-  }
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
