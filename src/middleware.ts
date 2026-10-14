@@ -16,9 +16,16 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Public CBT pages (browse published CBTs, take one with an entry code,
+  // and view a released result via its secret token)
+  if (pathname.startsWith("/cbt")) {
+    return NextResponse.next();
+  }
+
   // API routes that don't require authentication
-  // (/api/auth includes NextAuth handlers and the public signup endpoint)
-  if (pathname.startsWith("/api/auth")) {
+  // (/api/auth includes NextAuth handlers and the public signup endpoint;
+  // /api/cbt is the public entry-code CBT flow — its routes self-gate)
+  if (pathname.startsWith("/api/auth") || pathname.startsWith("/api/cbt")) {
     return NextResponse.next();
   }
 

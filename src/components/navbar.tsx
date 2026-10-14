@@ -21,6 +21,12 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <Link
+              href="/cbt"
+              className="text-gray-600 hover:text-primary transition-colors font-medium"
+            >
+              Free CBT
+            </Link>
+            <Link
               href="/quiz"
               className="text-gray-600 hover:text-primary transition-colors font-medium"
             >
@@ -77,6 +83,13 @@ export function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden border-t border-gray-100">
           <div className="px-4 py-4 space-y-3">
+            <Link
+              href="/cbt"
+              className="block text-gray-600 hover:text-primary transition-colors font-medium"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Free CBT
+            </Link>
             <Link
               href="/quiz"
               className="block text-gray-600 hover:text-primary transition-colors font-medium"

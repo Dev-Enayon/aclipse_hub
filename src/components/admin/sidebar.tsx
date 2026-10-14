@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 interface SidebarProps {
   userName: string;
@@ -69,11 +70,12 @@ export function AdminSidebar({
   const sidebarInner = (
     <>
       {/* Header */}
-      <div className="p-6 border-b border-gray-100">
+      <div className="p-6 border-b border-gray-100 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
           <Logo className="w-9 h-9 rounded-lg" />
           <span className="text-lg font-bold text-gray-900">Aclipse Hub</span>
         </Link>
+        <NotificationBell />
       </div>
 
       {/* Role Badge */}

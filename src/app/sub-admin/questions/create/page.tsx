@@ -26,6 +26,10 @@ export default function CreateQuestionPage() {
   const [difficulty, setDifficulty] = useState("MEDIUM");
   const [explanation, setExplanation] = useState("");
   const [year, setYear] = useState("");
+  const [schoolTier, setSchoolTier] = useState("");
+  const [examType, setExamType] = useState("CBT");
+
+  const TIERS = ["JSS1", "JSS2", "JSS3", "SS1", "SS2", "SS3"];
 
   const loadSubjects = useCallback(async () => {
     setLoading(true);
@@ -73,6 +77,8 @@ export default function CreateQuestionPage() {
           difficulty,
           explanation: explanation.trim() || undefined,
           year: year ? Number(year) : undefined,
+          schoolTier: schoolTier || undefined,
+          examType,
         }),
       });
       if (!res.ok) {
@@ -166,6 +172,33 @@ export default function CreateQuestionPage() {
               className={inputCls}
               placeholder="e.g. 2024"
             />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">School Section</label>
+            <select
+              value={schoolTier}
+              onChange={(e) => setSchoolTier(e.target.value)}
+              className={selectCls}
+            >
+              <option value="">All sections (general)</option>
+              {TIERS.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Exam Type</label>
+            <select
+              value={examType}
+              onChange={(e) => setExamType(e.target.value)}
+              className={selectCls}
+            >
+              <option value="CBT">CBT (Computer-Based Test)</option>
+              <option value="JAMB">JAMB (UTME practice)</option>
+            </select>
           </div>
         </div>
 

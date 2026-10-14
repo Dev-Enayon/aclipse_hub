@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 interface QuizAttempt {
   id: string;
@@ -181,6 +182,13 @@ export function DashboardClient({
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <Link
+                href="/cbt"
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                Free CBT Practice
+              </Link>
+              <NotificationBell />
               <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                 <span className="text-white font-bold">{firstName.charAt(0).toUpperCase()}</span>
               </div>

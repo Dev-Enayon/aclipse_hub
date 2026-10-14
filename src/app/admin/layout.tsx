@@ -11,6 +11,9 @@ const SUPER_ADMIN_LINKS = [
   { label: "Review Questions", href: "/admin/questions/review" },
   { label: "Reports", href: "/admin/reports" },
   { label: "Exams", href: "/admin/exams" },
+  { label: "CBT Management", href: "/admin/cbts" },
+  { label: "Entry Codes", href: "/admin/entry-codes" },
+  { label: "Send Message", href: "/admin/messages" },
   { label: "Activity Log", href: "/admin/activity-log" },
   { label: "Audit Log", href: "/admin/audit-log" },
 ];
@@ -21,6 +24,8 @@ const ADMIN_LINKS = [
   { label: "Premium Access", href: "/admin/premium-access" },
   { label: "Questions", href: "/admin/questions" },
   { label: "Exams", href: "/admin/exams" },
+  { label: "CBT Management", href: "/admin/cbts" },
+  { label: "Send Message", href: "/admin/messages" },
   { label: "Activity Log", href: "/admin/activity-log" },
 ];
 

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSubAdmin } from "@/lib/admin-auth";
 import { validateObjectiveQuestion } from "@/lib/question-workflow";
 import { logAdminActivity } from "@/lib/activity-logger";
+import { isValidSchoolTier, isValidExamType } from "@/lib/cbt";
 
 function parseOptions(raw: string): string[] {
   try {
@@ -51,6 +52,8 @@ export async function GET(request: NextRequest) {
       year: q.year,
       status: q.status,
       reviewFeedback: q.reviewFeedback,
+      schoolTier: q.schoolTier,
+      examType: q.examType,
       createdAt: q.createdAt,
       updatedAt: q.updatedAt,
     })),
@@ -77,10 +80,18 @@ export async function POST(request: NextRequest) {
   const difficulty = typeof body.difficulty === "string" ? body.difficulty : "MEDIUM";
   const year = typeof body.year === "number" ? body.year : null;
   const topicId = typeof body.topicId === "string" && body.topicId ? body.topicId : null;
+  const schoolTier = typeof body.schoolTier === "string" && body.schoolTier ? body.schoolTier : null;
+  const examType = typeof body.examType === "string" ? body.examType : "CBT";
 
   const errors = validateObjectiveQuestion({ text, subjectId, options, correctAnswer });
   if (errors.length > 0) {
     return NextResponse.json({ error: errors.join(" ") }, { status: 400 });
+  }
+  if (schoolTier && !isValidSchoolTier(schoolTier)) {
+    return NextResponse.json({ error: "Invalid school tier." }, { status: 400 });
+  }
+  if (!isValidExamType(examType)) {
+    return NextResponse.json({ error: "Invalid exam type." }, { status: 400 });
   }
 
   const subject = await prisma.subject.findUnique({ where: { id: subjectId }, select: { id: true } });
@@ -100,6 +111,8 @@ export async function POST(request: NextRequest) {
       questionType: "MCQ",
       marks: 1,
       year,
+      schoolTier,
+      examType,
       status: "DRAFT",
       createdBy: subAdmin.userId,
     },

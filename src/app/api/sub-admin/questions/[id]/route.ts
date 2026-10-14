@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSubAdmin } from "@/lib/admin-auth";
 import { canSubAdminEdit, validateObjectiveQuestion } from "@/lib/question-workflow";
 import { logAdminActivity } from "@/lib/activity-logger";
+import { isValidSchoolTier, isValidExamType } from "@/lib/cbt";
 
 /**
  * GET /api/sub-admin/questions/[id] — the Sub-Admin's own question.
@@ -65,10 +66,18 @@ export async function PATCH(
   const difficulty = typeof body.difficulty === "string" ? body.difficulty : existing.difficulty;
   const year = typeof body.year === "number" ? body.year : existing.year;
   const topicId = typeof body.topicId === "string" ? body.topicId || null : existing.topicId;
+  const schoolTier = typeof body.schoolTier === "string" ? body.schoolTier || null : existing.schoolTier;
+  const examType = typeof body.examType === "string" ? body.examType : existing.examType;
 
   const errors = validateObjectiveQuestion({ text, subjectId, options, correctAnswer });
   if (errors.length > 0) {
     return NextResponse.json({ error: errors.join(" ") }, { status: 400 });
+  }
+  if (schoolTier && !isValidSchoolTier(schoolTier)) {
+    return NextResponse.json({ error: "Invalid school tier." }, { status: 400 });
+  }
+  if (!isValidExamType(examType)) {
+    return NextResponse.json({ error: "Invalid exam type." }, { status: 400 });
   }
 
   const updated = await prisma.question.update({
@@ -82,6 +91,8 @@ export async function PATCH(
       explanation,
       difficulty,
       year,
+      schoolTier,
+      examType,
     },
   });
 

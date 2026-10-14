@@ -29,12 +29,15 @@ model User {
   questions     Question[]     @relation("QuestionAuthor")
   reviewedQuestions Question[] @relation("QuestionReviewer")
   exams         Exam[]         @relation("ExamAuthor")
+  reviewedExams Exam[]         @relation("ExamReviewer")
   weeklyQuizzes WeeklyQuiz[]   @relation("QuizAuthor")
   adminActivityLogs AdminActivityLog[]
   auditLogs     AuditLog[]
   accounts      Account[]
   sessions      Session[]
   passwordResetTokens PasswordResetToken[]
+  entryCodes    EntryCode[] @relation("EntryCodeCreator")
+  notifications Notification[]
 
   @@map("users")
 }
@@ -225,6 +228,8 @@ model Question {
   topic           Topic?    @relation(fields: [topicId], references: [id], onDelete: SetNull)
   difficulty      String    @default("MEDIUM") // EASY, MEDIUM, HARD
   questionType    String    @default("MCQ") // MCQ, TRUE_FALSE, OBJECTIVE
+  schoolTier      String?   // JSS1..JSS3, SS1..SS3 (null = general study)
+  examType        String    @default("CBT") // CBT, JAMB
   marks           Int       @default(1) // marks/score for this question
   tags            String    @default("[]") // JSON array of tags
   year            Int?
@@ -251,10 +256,16 @@ model Exam {
   description   String?
   subjectId     String
   subject       Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  schoolTier    String? // JSS1..JSS3, SS1..SS3 (null = general)
+  examType      String   @default("CBT") // CBT, JAMB
   timer         Int      @default(60) // minutes
   passingScore  Int      @default(50) // percentage
   totalMarks    Int      @default(60) // total marks for the exam
-  status        String   @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  status        String   @default("DRAFT") // DRAFT, PENDING_REVIEW, APPROVED, REJECTED, PUBLISHED, ARCHIVED
+  reviewFeedback String? // set when REJECTED — feedback for the creating Sub-Admin
+  reviewedBy    String?
+  reviewer      User?    @relation("ExamReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  reviewedAt    DateTime?
   createdBy     String?
   author        User?    @relation("ExamAuthor", fields: [createdBy], references: [id], onDelete: SetNull)
   createdAt     DateTime @default(now())
@@ -262,6 +273,7 @@ model Exam {
 
   questions     ExamQuestion[]
   attempts      StudentAttempt[]
+  entryCodes    EntryCode[]
 
   @@map("exams")
 }
@@ -309,21 +321,25 @@ model WeeklyQuizQuestion {
 }
 
 model StudentAttempt {
-  id            String    @id @default(cuid())
-  studentId     String
-  student       Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  userId        String
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String      @id @default(cuid())
+  studentId     String?
+  student       Student?    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entryCodeId   String?
+  entryCode     EntryCode?  @relation(fields: [entryCodeId], references: [id], onDelete: SetNull)
+  studentName   String? // candidate name entered with an entry code
   examId        String?
-  exam          Exam?     @relation(fields: [examId], references: [id], onDelete: SetNull)
+  exam          Exam?       @relation(fields: [examId], references: [id], onDelete: SetNull)
   quizId        String?
   quiz          WeeklyQuiz? @relation(fields: [quizId], references: [id], onDelete: SetNull)
-  startedAt     DateTime  @default(now())
+  startedAt     DateTime    @default(now())
   completedAt   DateTime?
   score         Int?
   totalQuestions Int?
-  answers       String    @default("[]") // JSON array of selected answers
-  timeTaken     Int?      // seconds
+  answers       String      @default("[]") // JSON array of selected answer indices
+  timeTaken     Int?        // seconds
+  status        String      @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED
 
   results       Result[]
 
@@ -338,6 +354,8 @@ model Result {
   correctAnswers  Int
   percentage      Float
   subjectBreakdown String   @default("{}") // JSON performance by subject/topic
+  releasedAt      DateTime? // when the Head Admin released this result
+  releaseToken    String?   @unique // secret lookup token for the student's result link
   createdAt       DateTime @default(now())
 
   @@map("results")
@@ -390,4 +408,52 @@ model AdminActivityLog {
   @@index([userId, createdAt(sort: Desc)])
   @@index([action, createdAt(sort: Desc)])
   @@map("admin_activity_logs")
+}
+
+// Infrastructure: single-row advisory lock used by the atomic Sub-Admin
+// limit functions (create_sub_admin_atomically / set_sub_admin_status_atomically).
+// Declared so Prisma never tries to destroy it during migration diffs.
+model SubAdminLock {
+  id Int @id
+
+  @@map("_sub_admin_lock")
+}
+
+model EntryCode {
+  id          String   @id @default(cuid())
+  code        String   @unique // e.g. AHC-XXXX-XXXX
+  cbtId       String?  // optional: bind the code to one specific CBT
+  cbt         Exam?    @relation(fields: [cbtId], references: [id], onDelete: SetNull)
+  studentName String?  // optional fixed name carried by the code
+  status      String   @default("UNUSED") // UNUSED, USED, REVOKED
+  usedBy      String?  // candidate name entered when the code was consumed
+  usedAt      DateTime?
+  createdBy   String
+  creator     User     @relation("EntryCodeCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attempts    StudentAttempt[]
+
+  @@index([cbtId])
+  @@index([status])
+  @@map("entry_codes")
+}
+
+model Notification {
+  id              String    @id @default(cuid())
+  recipientUserId String?   // null => broadcast to a whole role
+  recipientRole   String    // STUDENT, SUB_ADMIN, SUPER_ADMIN, ADMIN, ALL_ADMINS
+  kind            String    // MESSAGE, RESULT_RELEASE, QUESTION_STATUS, SYSTEM
+  subject         String
+  body            String
+  link            String?   // relative in-app destination
+  readAt          DateTime?
+  createdAt       DateTime  @default(now())
+
+  recipientUser   User?     @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, readAt(sort: Desc)])
+  @@index([recipientRole, createdAt(sort: Desc)])
+  @@map("notifications")
 }

@@ -6,6 +6,8 @@ const SUB_ADMIN_LINKS = [
   { label: "Dashboard", href: "/sub-admin/dashboard" },
   { label: "My Questions", href: "/sub-admin/questions" },
   { label: "Create Question", href: "/sub-admin/questions/create" },
+  { label: "My CBTs", href: "/sub-admin/cbts" },
+  { label: "Create CBT", href: "/sub-admin/cbts/create" },
 ];
 
 export default async function SubAdminLayout({
